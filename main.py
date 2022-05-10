@@ -1,43 +1,46 @@
-from pyannote.audio.pipelines import VoiceActivityDetection
-from pyannote.audio.pipelines import Resegmentation
-import noisereduce as nr
-import soundfile as sf
+from pyannote.audio import Pipeline
 
-# data, rate = sf.read('audio/afjiv.wav')
-# reduced_noise = nr.reduce_noise(y=data.T, sr=rate)
-# sf.write('audio-reduced/afjiv.wav', reduced_noise, rate)
-
-pipeline_vad = VoiceActivityDetection(segmentation="pyannote/segmentation")
+#
 
 
-HYPER_PARAMETERS_VAD = {
-  # onset/offset activation thresholds
-  "onset": 0.767, "offset": 0.713,
-  # remove speech regions shorter than that many seconds.
-  "min_duration_on": 0.182,
-  # fill non-speech regions shorter than that many seconds.
-  "min_duration_off": 0.501
-}
-pipeline_vad.instantiate(HYPER_PARAMETERS_VAD)
+"""
+SEGMENTATION
+"""
 
-vad_result = pipeline_vad('audio-reduced/afjiv.wav')
-# segmentation = pipeline("audio/afjiv.wav")
+"""
+pipeline = Pipeline.from_pretrained("pyannote/speaker-segmentation")
+output = pipeline("audio/ampme.wav")
 
-#print(vad_result)
+print(output)
+"""
 
-pipeline_res = Resegmentation(segmentation="pyannote/segmentation", diarization="baseline")
 
-HYPER_PARAMETERS_RES = {
-  # onset/offset activation thresholds
-  "onset": 0.537, "offset": 0.724,
-  # remove speech regions shorter than that many seconds.
-  "min_duration_on": 0.410,
-  # fill non-speech regions shorter than that many seconds.
-  "min_duration_off": 0.563
-}
-pipeline_res.instantiate(HYPER_PARAMETERS_RES)
-resegmented_baseline = pipeline_res({"audio": "audio-reduced/afjiv.wav", "baseline": vad_result})
+"""
+EMBEDDINGS
+"""
 
-print(resegmented_baseline)
+"""
+DIARIZATION
+"""
+
+from pytorch_lightning.core.mixins import DeviceDtypeModuleMixin
+from pyannote.audio.pipelines import SpeakerDiarization
+import torch
+
+a = SpeakerDiarization()
+a.from_pretrained("pyannote/speaker-diarization")
+a.segmentation.device = torch.device("cuda")
+output = a("audio/ampme.wav")
+
+# pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
+# output = pipeline("audio/ampme.wav")
+
+print(output)
+
+exit(0)
+
+for turn, _, speaker in output.itertracks(yield_label=True):
+    # speaker speaks between turn.start and turn.end
+    ...
 
 
