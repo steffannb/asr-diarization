@@ -1,8 +1,3 @@
-from pyannote.audio import Pipeline
-
-#
-
-
 """
 SEGMENTATION
 """
@@ -23,17 +18,25 @@ EMBEDDINGS
 DIARIZATION
 """
 
+
 from pytorch_lightning.core.mixins import DeviceDtypeModuleMixin
 from pyannote.audio.pipelines import SpeakerDiarization
 import torch
+from pyannote.audio.pipelines.utils import (
+    PipelineModel,
+    SpeakerDiarizationMixin,
+    get_devices,
+    get_model,
+)
+from ecapa import ECAPAModel
 
-a = SpeakerDiarization()
-a.from_pretrained("pyannote/speaker-diarization")
-a.segmentation.device = torch.device("cuda")
-output = a("audio/ampme.wav")
+model = get_model({"checkpoint": "ecapa/exps/pretrain.model", "map_location": torch.device("cuda")})
+# model = get_model(ECAPAModel.ECAPAModel)
 
-# pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization")
-# output = pipeline("audio/ampme.wav")
+print(model.specifications)
+exit(0)
+pipeline = SpeakerDiarization(embedding=model)
+output = pipeline("audio/ampme.wav")
 
 print(output)
 
