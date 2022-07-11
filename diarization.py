@@ -1,4 +1,4 @@
-from pyannote.audio.pipelines import SpeakerDiarization
+from pyannote.audio.pipeline import SpeakerDiarization
 
 def main():
     pipeline = SpeakerDiarization()
